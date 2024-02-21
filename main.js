@@ -16,6 +16,9 @@ const IOhandler = require("./IOhandler.js");
 const zipFilePath = path.join(__dirname, "myfile.zip");
 const pathUnzipped = path.join(__dirname, "unzipped");
 const pathProcessed = path.join(__dirname, "grayscaled");
+const pathSepia = path.join(__dirname, "sepia");
+const pathInverted = path.join(__dirname, "inverted");
+const userMenu = require("./IOhandler.js");
 const { Worker, isMainThread, parentPort } = require("worker_threads");
 
 const runScript = async () => {
@@ -28,7 +31,15 @@ const runScript = async () => {
         path.join(pathProcessed, path.basename(file))
       );
     }
-    console.log("Grayscale conversion completed for all images");
+    for (const file of pngFiles) {
+      await IOhandler.sepia(file, path.join(pathSepia, path.basename(file)));
+    }
+    for (const file of pngFiles) {
+      await IOhandler.invert(
+        file,
+        path.join(pathInverted, path.basename(file))
+      );
+    }
   } catch (error) {
     console.error("Error occurred:", error);
   }

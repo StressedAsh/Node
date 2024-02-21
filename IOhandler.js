@@ -137,8 +137,106 @@ const grayScale = async (pathIn, pathOut) => {
   });
 };
 
+const sepia = async (pathIn, pathOut) => {
+  return new Promise((resolve, reject) => {
+    fs.promises
+      .mkdir(path.dirname(pathOut), { recursive: true })
+      .catch((error) => {
+        console.error("Error while creating directory:", error);
+        reject(error);
+      });
+    fs.createReadStream(pathIn)
+      .pipe(new PNG())
+      .on("parsed", function () {
+        for (let y = 0; y < this.height; y++) {
+          for (let x = 0; x < this.width; x++) {
+            const idx = (this.width * y + x) << 2;
+            let r = this.data[idx];
+            let g = this.data[idx + 1];
+            let b = this.data[idx + 2];
+            this.data[idx] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+            this.data[idx + 1] = Math.min(
+              255,
+              r * 0.349 + g * 0.686 + b * 0.168
+            );
+            this.data[idx + 2] = Math.min(
+              255,
+              r * 0.272 + g * 0.534 + b * 0.131
+            );
+          }
+        }
+
+        this.pack()
+          .pipe(fs.createWriteStream(pathOut))
+          .on("finish", () => {
+            console.log(`Sepia conversion completed for ${pathIn}`);
+            resolve();
+          })
+          .on("error", (error) => {
+            console.error(`Error writing sepia image for ${pathIn}: ${error}`);
+            reject(error);
+          });
+      })
+      .on("error", (error) => {
+        console.error(`Error parsing PNG file ${pathIn}: ${error}`);
+        reject(error);
+      });
+  });
+};
+
+const invert = async (pathIn, pathOut) => {
+  return new Promise((resolve, reject) => {
+    fs.promises
+      .mkdir(path.dirname(pathOut), { recursive: true })
+      .catch((error) => {
+        console.error("Error while creating directory:", error);
+        reject(error);
+      });
+    fs.createReadStream(pathIn)
+      .pipe(new PNG())
+      .on("parsed", function () {
+        for (let y = 0; y < this.height; y++) {
+          for (let x = 0; x < this.width; x++) {
+            const idx = (this.width * y + x) << 2;
+            this.data[idx] = 255 - this.data[idx];
+            this.data[idx + 1] = 255 - this.data[idx + 1];
+            this.data[idx + 2] = 255 - this.data[idx + 2];
+          }
+        }
+
+        this.pack()
+          .pipe(fs.createWriteStream(pathOut))
+          .on("finish", () => {
+            console.log(`Inverted conversion completed for ${pathIn}`);
+            resolve();
+          })
+          .on("error", (error) => {
+            console.error(
+              `Error writing inverted image for ${pathIn}: ${error}`
+            );
+            reject(error);
+          });
+      })
+      .on("error", (error) => {
+        console.error(`Error parsing PNG file ${pathIn}: ${error}`);
+        reject(error);
+      });
+  });
+};
+
+const userMenu = () => {
+  console.log("1. Grayscale");
+  console.log("2. Sepia");
+  console.log("3. Inverted");
+  console.log("4. Dithering");
+  console.log("5. Exit");
+};
+
 module.exports = {
   unzip,
   readDir,
   grayScale,
+  sepia,
+  invert,
+  userMenu,
 };
