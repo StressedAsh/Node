@@ -1,0 +1,37 @@
+const path = require("path");
+/*
+ * Project: Milestone 1
+ * File Name: main.js
+ * Description:
+ *
+ * Created Date:
+ * Author: Ashutosh Dhatwalia
+ *
+ */
+
+// const workerThreads = require("worker_threads");
+// LARK, SEPIA, GRAYSCALE, INVERTED, DITHERING
+
+const IOhandler = require("./IOhandler.js");
+const zipFilePath = path.join(__dirname, "myfile.zip");
+const pathUnzipped = path.join(__dirname, "unzipped");
+const pathProcessed = path.join(__dirname, "grayscaled");
+const { Worker, isMainThread, parentPort } = require("worker_threads");
+
+const runScript = async () => {
+  try {
+    await IOhandler.unzip(zipFilePath, pathUnzipped);
+    const pngFiles = await IOhandler.readDir(pathUnzipped);
+    for (const file of pngFiles) {
+      await IOhandler.grayScale(
+        file,
+        path.join(pathProcessed, path.basename(file))
+      );
+    }
+    console.log("Grayscale conversion completed for all images");
+  } catch (error) {
+    console.error("Error occurred:", error);
+  }
+};
+
+runScript();
